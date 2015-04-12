@@ -24,14 +24,14 @@ unsigned char rx_data[90];
 char tx_data[90];
 String rx_msg = "";
 String tx_msg = "";
-int length = 0 ;
+int len = 0 ;
 
 void setup() {
     Serial.begin(SRate);
     while(!Serial);
-    Serial.println('Serial is ok!');
+    Serial.println("Serial is ok!");
     sSerial.begin(SSRate);
-    Serial.println('sSerial is ok!');
+    Serial.println("sSerial is ok!");
     pinMode(LED_PIN, OUTPUT);
     delay(5000);
     register_device();
@@ -42,7 +42,7 @@ void loop() {
         unsigned char count = sSerial.readBytesUntil(END_FLAG, rx_data, 90);
         rx_msg = unpack_msg(rx_data, count);
         Serial.println("Receive msg: " + rx_msg);
-        handle_msg(tx_msg);
+        handle_msg(rx_msg);
         rx_msg = "";
     }
 
@@ -55,11 +55,11 @@ void loop() {
 **
 */
 void handle_msg(String msg){
-    if(msg == "light on"){
+    if(msg == String("light on")){
         digitalWrite(LED_PIN, HIGH);
-    }else if(msg == "light off"){
+    }else if(msg==String("light off")){
         digitalWrite(LED_PIN, LOW);
-    }else if(msg == "humtem"){
+    }else if(msg==String("humtem")){
         int chk = DHT.read11(DHT11_PIN);
         unsigned char hum = DHT.humidity;
         unsigned char tem = DHT.temperature;
@@ -80,9 +80,9 @@ void handle_msg(String msg){
 */
 void register_device(){
     tx_msg = "";
-    tx_msg + = "register " + String(DEVICE_ID) + " "+ String(DEVICE_TYPE);
+    tx_msg = "register " + String(DEVICE_ID) + " "+ String(DEVICE_TYPE);
     len = tx_msg.length();
-    pack_msg(text_msg, tx_data, len);
+    pack_msg(tx_msg, tx_data, len);
     sSerial.write(tx_data, len+1);
     Serial.println("Send msg: " + tx_msg);
     tx_msg = "";
@@ -101,7 +101,7 @@ void pack_msg(String msg, char *msg_arr, unsigned char n){
 
 String unpack_msg(unsigned char * msg, unsigned char n){
     String msg_str = "";
-    for(unsigned char i=0; i<n; i++){
+    for(unsigned char i=0; i<n-1; i++){
         msg[i] -= 128;
         msg_str += char(msg[i]);
     }
