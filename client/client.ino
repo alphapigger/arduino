@@ -64,7 +64,7 @@ void handle_msg(String msg){
         String msg = String(DEVICE_ID) + " " + String(humtem[0]) + " "+ String(humtem[1]);
         send_msg(msg);
     }else{
-        send_msg(String("unknown"))
+        send_msg(String("unknown"));
     }
 }
 
@@ -85,11 +85,11 @@ void get_hum_tem(unsigned char * humtem, unsigned char n){
             Serial.print("Unknown error, \t");
     }
     if(chk == 0){
-        humtem[0] == DHT.humidity;
-        humtem[1] == DHT.temperature;
+        humtem[0] = DHT.humidity;
+        humtem[1] = DHT.temperature;
     }else{
-        humtem[0] == 0;
-        humtem[1] == 0;
+        humtem[0] = 0;
+        humtem[1] = 0;
     }
     Serial.print(DHT.humidity, 1);
     Serial.println(DHT.temperature, 1);
