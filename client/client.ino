@@ -23,7 +23,6 @@ dht DHT;
 unsigned char rx_data[90];
 char tx_data[90];
 String rx_msg = "";
-String tx_msg = "";
 int len = 0 ;
 
 void setup() {
@@ -60,32 +59,54 @@ void handle_msg(String msg){
     }else if(msg==String("light off")){
         digitalWrite(LED_PIN, LOW);
     }else if(msg==String("humtem")){
-        int chk = DHT.read11(DHT11_PIN);
-        unsigned char hum = DHT.humidity;
-        unsigned char tem = DHT.temperature;
-        tx_msg = "";
-        tx_msg = String(DEVICE_ID) + " " +String(hum) + " "+ String(tem);
-        len = tx_msg.length();
-        pack_msg(tx_msg, tx_data, len);
-        sSerial.write(tx_data, len+1);
-        Serial.println("Send msg: " + tx_msg);
-        tx_msg = "";
+        unsigned char humtem[2];
+        humtem = get_hum_tem();
+        String msg = String(DEVICE_ID) + " " + String(humtem[0]) + " "+ String(humtem[1]);
+        send_msg(msg);
     }
 }
 
+
+unsigned char * get_hum_tem(){
+    unsigned char res[2];
+    unsigned char chk = DHT.read11(DHT11_PIN);
+    switch (chk) {
+        case 0:
+            Serial.print("OK, \t");
+            break;
+        case -1:
+            Serial.print("Checksum error, \t");
+            break;
+        case -2:
+            Serial.print("Time out error, \t");
+            break;
+        default:
+            Serial.print("Unkown error, \t");
+    }
+    unsigned char humidity = DHT.humidity;
+    unsigned char temperature = DHT.temperature;
+    res[0] = humidity;
+    res[1] = temperature;
+    Serial.print(DHT.humidity, 1);
+    Serial.println(DHT.temperature, 1);
+    return res;
+}
+
+
+void send_msg(String msg){
+    len = msg.length();
+    pack_msg(msg, tx_data, len);
+    sSerial.write(tx_data, len+1);
+    Serial.println("Send msg: " + msg);
+}
 
 
 /**
 ** 向控制中心注册设备
 */
 void register_device(){
-    tx_msg = "";
-    tx_msg = "register " + String(DEVICE_ID) + " "+ String(DEVICE_TYPE);
-    len = tx_msg.length();
-    pack_msg(tx_msg, tx_data, len);
-    sSerial.write(tx_data, len+1);
-    Serial.println("Send msg: " + tx_msg);
-    tx_msg = "";
+    String msg = String("register ") + String(DEVICE_ID) + " " + String(DEVICE_TYPE);
+    send_msg(msg);
 }
 
 /**
@@ -96,12 +117,13 @@ void pack_msg(String msg, char *msg_arr, unsigned char n){
     for(char i=0; i < n; i++){
         msg_arr[i] = msg.charAt(i);
     }
-    msg_arr[n] = NL;
+    msg_arr[n] = NL;  //添加换行符
 }
+
 
 String unpack_msg(unsigned char * msg, unsigned char n){
     String msg_str = "";
-    for(unsigned char i=0; i<n-1; i++){
+    for(unsigned char i=0; i<n-1; i++){  // 去除结束符
         msg[i] -= 128;
         msg_str += char(msg[i]);
     }
