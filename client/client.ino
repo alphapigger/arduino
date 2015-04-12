@@ -60,15 +60,14 @@ void handle_msg(String msg){
         digitalWrite(LED_PIN, LOW);
     }else if(msg==String("humtem")){
         unsigned char humtem[2];
-        humtem = get_hum_tem();
+        get_hum_tem(humtem, 2);
         String msg = String(DEVICE_ID) + " " + String(humtem[0]) + " "+ String(humtem[1]);
         send_msg(msg);
     }
 }
 
 
-unsigned char * get_hum_tem(){
-    unsigned char res[2];
+void get_hum_tem(unsigned char * humtem, unsigned char n){
     unsigned char chk = DHT.read11(DHT11_PIN);
     switch (chk) {
         case 0:
@@ -85,11 +84,10 @@ unsigned char * get_hum_tem(){
     }
     unsigned char humidity = DHT.humidity;
     unsigned char temperature = DHT.temperature;
-    res[0] = humidity;
-    res[1] = temperature;
+    humtem[0] = humidity;
+    humtem[1] = temperature;
     Serial.print(DHT.humidity, 1);
     Serial.println(DHT.temperature, 1);
-    return res;
 }
 
 
