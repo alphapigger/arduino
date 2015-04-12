@@ -63,6 +63,8 @@ void handle_msg(String msg){
         get_hum_tem(humtem, 2);
         String msg = String(DEVICE_ID) + " " + String(humtem[0]) + " "+ String(humtem[1]);
         send_msg(msg);
+    }else{
+        send_msg(String("unknown"))
     }
 }
 
@@ -80,7 +82,7 @@ void get_hum_tem(unsigned char * humtem, unsigned char n){
             Serial.print("Time out error, \t");
             break;
         default:
-            Serial.print("Unkown error, \t");
+            Serial.print("Unknown error, \t");
     }
     if(chk == 0){
         humtem[0] == DHT.humidity;
