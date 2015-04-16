@@ -13,8 +13,11 @@
 #define DELTA 128
 
 //device config
-#define DEVICE_ID 1
-#define DEVICE_TYPE 3   // 1: hum&tem   2: light   3: hum&tem&light
+#define SENSOR_ID 1
+#define SENSOR_TYPE 3   // 1: hum&tem   2: light   3: hum&tem&light
+
+#define REGISTER_CMD 1
+#define HUMTEM_CMD 2
 
 
 SoftwareSerial sSerial(RxD, TxD);
@@ -46,25 +49,20 @@ void loop() {
     }
 
     if (Serial.available()){
-
+        Serial.println(Serial.read())
     }
 }
 
 /**
-**
+**接收控制中心发送过来的命令
+**暂时只有控制电灯的cmd
 */
 void handle_msg(String msg){
-    if(msg == String("light on")){
-        digitalWrite(LED_PIN, HIGH);
-    }else if(msg==String("light off")){
-        digitalWrite(LED_PIN, LOW);
-    }else if(msg==String("humtem")){
-        unsigned char humtem[2];
-        get_hum_tem(humtem, 2);
-        String msg = String(DEVICE_ID) + " " + String(humtem[0]) + " "+ String(humtem[1]);
-        send_msg(msg);
-    }else{
-        Serial.println(msg);
+    Serial.println("Receive msg: " + msg);
+    char *valPosition = strtok(msg, " ");
+    while(valPosition!=NULL){
+        Serial.println(valPosition);
+        valPosition = strtok(NULL, " ");
     }
 }
 
@@ -108,7 +106,7 @@ void send_msg(String msg){
 ** 向控制中心注册设备
 */
 void register_device(){
-    String msg = String("register ") + String(DEVICE_ID) + " " + String(DEVICE_TYPE);
+    String msg = String(REGISTER_CMD) + " " String(SENSOR_ID) + " " + String(SENSOR_TYPE);
     send_msg(msg);
 }
 
