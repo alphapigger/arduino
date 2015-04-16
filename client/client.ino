@@ -64,7 +64,7 @@ void handle_msg(String msg){
         String msg = String(DEVICE_ID) + " " + String(humtem[0]) + " "+ String(humtem[1]);
         send_msg(msg);
     }else{
-        send_msg(String("unknown"));
+        Serial.println(msg);
     }
 }
 
