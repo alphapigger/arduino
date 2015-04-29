@@ -44,13 +44,12 @@ void loop() {
     if(sSerial.available()){
         unsigned char count = sSerial.readBytesUntil(END_FLAG, rx_data, 90);
         unpack_msg(rx_data, count);
-        Serial.println("Receive msg: " + String(rx_data));
+        Serial.println("Receive msg: " + String((char *)rx_data));
         handle_msg((char *)rx_data);
-        rx_msg = "";
     }
 
     if (Serial.available()){
-        Serial.println(Serial.read())
+        Serial.println(Serial.read());
     }
 }
 
@@ -58,7 +57,11 @@ void loop() {
 ** 向控制中心注册设备
 */
 void register_device(){
-    String msg = String(REGISTER_CMD) + " " + String(SENSOR_ID) + " " + String(SENSOR_TYPE);
+    //首次信息存在干扰，需要发送冗余信息
+    String msg = String(0) + " " + String(0) + " " + String(0);
+    send_msg(msg);
+    delay(1000);
+    msg = String(REGISTER_CMD) + " " + String(SENSOR_ID) + " " + String(SENSOR_TYPE);
     send_msg(msg);
     delay(1000);
     msg = String(REGISTER_CMD) + " " + String(SENSOR_1_ID) + " " + String(SNESOR_1_TYPE);
@@ -70,24 +73,26 @@ void register_device(){
 */
 void handle_msg(char *msg){
     char *valPosition = strtok(msg, " ");
-    char data[4];
+    int data[4];
     char i = 0;
     while(valPosition!=NULL){
-        data[i] = valPosition;
+        data[i] = int(*valPosition) - 48;
         valPosition = strtok(NULL, " ");
-        i +=;
+        i = i + 1 ;
     }
-    if (data[0] == SENSOR_1_ID){
-        if(data[1] > 0){
+
+    if (data[0] == 2){
+      Serial.println("led");
+        if(int(data[1]) > 0){
             digitalWrite(LED_PIN, HIGH);
         }else{
             digitalWrite(LED_PIN, LOW);
         }
-    }else if(data[0] == SENSOR_ID){
+    }else if( data[0] == 1){
         //向控制中心上传数据
         unsigned char humtem[2];
         get_hum_tem(humtem, 2);
-        String msg = String(DATA_CMD) + " " + String(SENSOR_ID) + " " + String(SENSOR_TYPE) + " " + Sting(humtem[1]) + "," + String(humtem[0]);
+        String msg = String(DATA_CMD) + " " + String(SENSOR_ID) + " " + String(SENSOR_TYPE) + " " + String(humtem[1]) + "," + String(humtem[0]);
         send_msg(msg);
     }
 }
@@ -147,6 +152,5 @@ void pack_msg(String msg, char *msg_arr, unsigned char n){
 void unpack_msg(unsigned char * msg, unsigned char n){
     for(unsigned char i=0; i<n-1; i++){  // 去除结束符
         msg[i] -= 128;
-        msg_str += char(msg[i]);
     }
 }
