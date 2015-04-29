@@ -12,20 +12,21 @@
 #define NL 10
 #define DELTA 128
 
-//device config
-#define SENSOR_ID 1
-#define SENSOR_TYPE 3   // 1: hum&tem   2: light   3: hum&tem&light
+// sensor config
+//3 HUM_TEM   4 LED
+#define SENSOR_ID 1  // hum&tem
+#define SENSOR_TYPE 3
+#define SENSOR_1_ID 2   // led
+#define SNESOR_1_TYPE 4
 
 #define REGISTER_CMD 1
-#define HUMTEM_CMD 2
-
+#define DATA_CMD 2
 
 SoftwareSerial sSerial(RxD, TxD);
 dht DHT;
 
 unsigned char rx_data[90];
 char tx_data[90];
-String rx_msg = "";
 int len = 0 ;
 
 void setup() {
@@ -42,9 +43,9 @@ void setup() {
 void loop() {
     if(sSerial.available()){
         unsigned char count = sSerial.readBytesUntil(END_FLAG, rx_data, 90);
-        rx_msg = unpack_msg(rx_data, count);
-        Serial.println("Receive msg: " + rx_msg);
-        handle_msg(rx_msg);
+        unpack_msg(rx_data, count);
+        Serial.println("Receive msg: " + String(rx_data));
+        handle_msg((char *)rx_data);
         rx_msg = "";
     }
 
@@ -54,19 +55,46 @@ void loop() {
 }
 
 /**
-**接收控制中心发送过来的命令
-**暂时只有控制电灯的cmd
+** 向控制中心注册设备
 */
-void handle_msg(String msg){
-    Serial.println("Receive msg: " + msg);
+void register_device(){
+    String msg = String(REGISTER_CMD) + " " + String(SENSOR_ID) + " " + String(SENSOR_TYPE);
+    send_msg(msg);
+    delay(1000);
+    msg = String(REGISTER_CMD) + " " + String(SENSOR_1_ID) + " " + String(SNESOR_1_TYPE);
+    send_msg(msg);
+}
+
+/**
+**处理控制中心发送过来的命令
+*/
+void handle_msg(char *msg){
     char *valPosition = strtok(msg, " ");
+    char data[4];
+    char i = 0;
     while(valPosition!=NULL){
-        Serial.println(valPosition);
+        data[i] = valPosition;
         valPosition = strtok(NULL, " ");
+        i +=;
+    }
+    if (data[0] == SENSOR_1_ID){
+        if(data[1] > 0){
+            digitalWrite(LED_PIN, HIGH);
+        }else{
+            digitalWrite(LED_PIN, LOW);
+        }
+    }else if(data[0] == SENSOR_ID){
+        //向控制中心上传数据
+        unsigned char humtem[2];
+        get_hum_tem(humtem, 2);
+        String msg = String(DATA_CMD) + " " + String(SENSOR_ID) + " " + String(SENSOR_TYPE) + " " + Sting(humtem[1]) + "," + String(humtem[0]);
+        send_msg(msg);
     }
 }
 
-
+/**
+** 获取温度湿度
+*/
 void get_hum_tem(unsigned char * humtem, unsigned char n){
     unsigned char chk = DHT.read11(DHT11_PIN);
     switch (chk) {
@@ -93,7 +121,9 @@ void get_hum_tem(unsigned char * humtem, unsigned char n){
     Serial.println(DHT.temperature, 1);
 }
 
-
+/**
+** 向控制中心发送指令
+*/
 void send_msg(String msg){
     len = msg.length();
     pack_msg(msg, tx_data, len);
@@ -101,14 +131,6 @@ void send_msg(String msg){
     Serial.println("Send msg: " + msg);
 }
 
-
-/**
-** 向控制中心注册设备
-*/
-void register_device(){
-    String msg = String(REGISTER_CMD) + " " String(SENSOR_ID) + " " + String(SENSOR_TYPE);
-    send_msg(msg);
-}
 
 /**
 ** 封装将要发送的消息，在消息末尾添加\n
@@ -122,11 +144,9 @@ void pack_msg(String msg, char *msg_arr, unsigned char n){
 }
 
 
-String unpack_msg(unsigned char * msg, unsigned char n){
-    String msg_str = "";
+void unpack_msg(unsigned char * msg, unsigned char n){
     for(unsigned char i=0; i<n-1; i++){  // 去除结束符
         msg[i] -= 128;
         msg_str += char(msg[i]);
     }
-    return msg_str;
 }
