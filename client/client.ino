@@ -14,10 +14,8 @@
 
 // sensor config
 //3 HUM_TEM   4 LED
-#define SENSOR_ID 1  // hum&tem
-#define SENSOR_TYPE 3
-#define SENSOR_1_ID 2   // led
-#define SNESOR_1_TYPE 4
+#define SENSOR_ID 3  // led
+#define SENSOR_TYPE 4
 
 #define REGISTER_CMD 1
 #define DATA_CMD 2
@@ -63,9 +61,6 @@ void register_device(){
     delay(1000);
     msg = String(REGISTER_CMD) + " " + String(SENSOR_ID) + " " + String(SENSOR_TYPE);
     send_msg(msg);
-    delay(1000);
-    msg = String(REGISTER_CMD) + " " + String(SENSOR_1_ID) + " " + String(SNESOR_1_TYPE);
-    send_msg(msg);
 }
 
 /**
@@ -81,19 +76,13 @@ void handle_msg(char *msg){
         i = i + 1 ;
     }
 
-    if (data[0] == 2){
+    if (data[0] == SENSOR_ID){
       Serial.println("led");
         if(int(data[1]) > 0){
             digitalWrite(LED_PIN, HIGH);
         }else{
             digitalWrite(LED_PIN, LOW);
         }
-    }else if( data[0] == 1){
-        //向控制中心上传数据
-        unsigned char humtem[2];
-        get_hum_tem(humtem, 2);
-        String msg = String(DATA_CMD) + " " + String(SENSOR_ID) + " " + String(SENSOR_TYPE) + " " + String(humtem[1]) + "," + String(humtem[0]);
-        send_msg(msg);
     }
 }
 
