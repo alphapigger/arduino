@@ -72,7 +72,7 @@ void register_device(){
 **处理控制中心发送过来的命令
 */
 void handle_msg(char *msg){
-    char *valPosition = strtok(msg, " ");
+    char *valPosition = strtok(msg, " ");  // msg sensor_id sensor_value
     int data[4];
     char i = 0;
     while(valPosition!=NULL){
