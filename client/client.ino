@@ -81,14 +81,14 @@ void handle_msg(char *msg){
         i = i + 1 ;
     }
 
-    if (data[0] == 2){
+    if (data[0] == SENSOR_1_ID){
       Serial.println("led");
         if(int(data[1]) > 0){
             digitalWrite(LED_PIN, HIGH);
         }else{
             digitalWrite(LED_PIN, LOW);
         }
-    }else if( data[0] == 1){
+    }else if( data[0] == SENSOR_ID){
         //向控制中心上传数据
         unsigned char humtem[2];
         get_hum_tem(humtem, 2);
